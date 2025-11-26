@@ -1,0 +1,4 @@
+ping_host:
+  description: Ping a host
+  shell:
+    - ping -c 4 {{ host }}

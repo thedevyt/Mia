@@ -1,0 +1,4 @@
+git_clone:
+  description: Clone a Git repository
+  shell:
+    - git clone {{ url }} {{ dest }}

@@ -1,0 +1,12 @@
+# CLI mode
+python -m ai_adapter.cli
+
+# GUI mode
+python -m ai_adapter.gui
+
+# Voice mode
+python -m ai_adapter.voice
+
+# Agent mode
+python3 -m ai_adapter.planner.self_loop \
+"There is a game in ~/jojo_game2, modify the logic so I have a paddle and have to keep the ball in the upper section, edit only the parts needed."

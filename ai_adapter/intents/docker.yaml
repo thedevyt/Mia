@@ -1,0 +1,4 @@
+list_containers:
+  description: List Docker containers
+  shell:
+    - docker ps --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}'

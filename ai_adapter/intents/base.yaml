@@ -1,0 +1,4 @@
+say_hello:
+  description: Print a hello message
+  shell:
+  - echo "Hello! I am your AI Adapter."

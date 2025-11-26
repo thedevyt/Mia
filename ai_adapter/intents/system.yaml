@@ -1,0 +1,9 @@
+show_top:
+  description: Show top CPU processes
+  shell:
+    - bash -lc 'ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head -n 20'
+
+show_uptime:
+  description: Show system uptime
+  shell:
+    - uptime -p

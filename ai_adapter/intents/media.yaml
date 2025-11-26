@@ -1,0 +1,9 @@
+music_toggle:
+  description: Play or pause media
+  shell:
+    - playerctl play-pause
+
+set_volume:
+  description: Set volume percentage
+  shell:
+    - pactl set-sink-volume @DEFAULT_SINK@ {{ percent }}%

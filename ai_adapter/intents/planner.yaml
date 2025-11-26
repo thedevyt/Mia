@@ -1,0 +1,7 @@
+plan_task:
+  description: Plan and execute multiple steps autonomously to reach a goal
+  plugin: planner_wrapper.run
+  params:
+    goal: "Text goal to achieve"
+    steps: "Max steps (optional)"
+

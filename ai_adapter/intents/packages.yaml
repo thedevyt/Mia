@@ -1,0 +1,5 @@
+install_package:
+  description: Install a package with apt
+  shell:
+    - sudo apt-get update
+    - sudo apt-get install -y {{ package }}

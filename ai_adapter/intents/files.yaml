@@ -1,0 +1,60 @@
+create_folder:
+  description: Create a folder and open it
+  plugin: files.create_folder
+  params:
+    path: "Path to create"
+
+list_home:
+  description: List contents of the home directory
+  shell:
+    - ls -lah ~
+
+create_file:
+  description: Create a new file with optional text content
+  plugin: files.create_file
+  params:
+    path: "Path to create"
+    content: "Optional initial content"
+
+write_file:
+  description: Write or append to an entire file
+  plugin: files.write_file
+  params:
+    path: "File path"
+    content: "Text to write"
+    mode: "overwrite"   # or "append"
+
+edit_file:
+  description: >
+    Edit part of a file or replace whole content.
+    Supports:
+      - start_marker + end_marker → replace everything between them
+      - keyword → replace a line OR full def/class block containing it (indentation auto-corrected)
+      - no markers → overwrite entire file
+  plugin: files.edit_file
+  params:
+    path: "File to edit"
+    new_content: "New text to insert (can be unindented; auto-corrected)"
+    start_marker: "Marker where edit starts (optional)"
+    end_marker: "Marker where edit ends (optional)"
+    keyword: "Keyword or function/class name to replace (optional)"
+
+read_file:
+  description: Read a file’s contents and print to log
+  plugin: files.read_file
+  params:
+    path: "File to read"
+
+file_exists:
+  description: Check whether a file exists
+  plugin: files.file_exists
+  params:
+    path: "Path to check"
+
+list_dir:
+  plugin: files.list_dir
+  description: "List files in a specific directory path"
+  params:
+    path: required
+
+
