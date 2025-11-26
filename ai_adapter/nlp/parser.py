@@ -11,6 +11,7 @@ SYSTEM_PROMPT = (
     "  ping_host, music_toggle, set_volume, list_containers, git_clone, say_hello, "
     "  create_file, write_file, edit_file, read_file, file_exists.\n"
     "- Include the minimal parameters needed for that intent.\n"
+    "- If the user asks to install Chrome (\"chrome\" or \"google chrome\"), use intent install_package with params {\"package\": \"google-chrome-stable\"}.\n"
     "- Example 1: {\"intent\": \"create_folder\", \"params\": {\"path\": \"~/jojo\"}}\n"
     "- Example 2: {\"intent\": \"create_file\", \"params\": {\"path\": \"~/demo/main.py\", \"content\": \"print('hi')\"}}\n"
     "- Example 3: {\"intent\": \"edit_file\", \"params\": {\"path\": \"~/demo/main.py\", \"keyword\": \"print\", \"new_content\": \"print('Hello')\"}}\n"

@@ -18,6 +18,15 @@ class Executor:
         Builds commands or plugin call specs depending on YAML intent type.
         """
         if "shell" in spec:
+            pkg = (params or {}).get("package")
+            # Special-case Chrome to ensure the official repo is available
+            if pkg == "google-chrome-stable":
+                return [
+                    "wget -qO- https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg",
+                    'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list',
+                    "sudo apt-get update",
+                    "sudo apt-get install -y google-chrome-stable",
+                ]
             return [self._render(cmd, params) for cmd in spec["shell"]]
         elif "plugin" in spec:
             return [{"plugin": spec["plugin"], "params": params}]

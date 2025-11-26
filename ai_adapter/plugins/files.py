@@ -130,8 +130,9 @@ def edit_file(
         # 2️⃣  Keyword-based (replace full function/class block)
         elif keyword:
             block_pattern = (
-                rf"^[ \t]*(def|class)[ \t]+{re.escape(keyword.strip().split('(')[0])}"
-                r"\(?.*?\)?\:.*?(?=^[ \t]*(?:def|class|\Z))"
+                rf"(^[ \t]*@.*\n)*"  # decorators
+                rf"^[ \t]*(async[ \t]+)?(def|class)[ \t]+{re.escape(keyword.strip().split('(')[0])}\b"
+                r".*?(?=^[ \t]*(?:def|class|@|\Z))"
             )
             match = re.search(block_pattern, before, flags=re.DOTALL | re.MULTILINE)
             if match:
@@ -152,9 +153,10 @@ def edit_file(
                 edited = before[:match.start()] + fixed_content + before[match.end():]
                 replaced = True
             else:
-                # fallback to single line keyword replace
-                edited = before.replace(keyword, new_content)
-                replaced = True
+                # safer single-line keyword replace (anchors full line)
+                pattern = rf"^[ \t]*{re.escape(keyword)}[ \t]*$"
+                edited, n = re.subn(pattern, new_content, before, flags=re.MULTILINE)
+                replaced = n > 0
 
         # 3️⃣  Default: overwrite entire file (safe fallback)
         else:
@@ -187,10 +189,10 @@ def edit_file(
 
         if replaced:
             print(f"[green]✅ Edited file successfully:[/green] {path}")
-        else:
-            print(f"[yellow]⚠️ No match found for keyword or markers in:[/yellow] {path}")
+            return 0
 
-        return 0 if replaced else 1
+        print(f"[yellow]⚠️ No match found for keyword or markers in:[/yellow] {path}")
+        return 1
 
     except Exception as e:
         print(f"[red]❌ edit_file error:[/red] {e}")
@@ -247,6 +249,4 @@ def list_dir(path: str):
     except Exception as e:
         print(f"Error listing {target}: {e}")
         return 1
-
-
 

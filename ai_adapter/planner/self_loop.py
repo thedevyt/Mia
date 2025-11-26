@@ -271,6 +271,11 @@ class Planner:
             thought = data.get("thought", "")
             intent = data.get("intent")
             params = data.get("params", {}) or {}
+            # Prevent infinite read loops by forcing an edit action next
+            if intent == "read_file" and seen_actions.count("read_file") >= 1:
+                print("[GUARD] Repeated read_file detected; forcing edit_file and stopping.")
+                intent = "edit_file"
+                stop = True
             # ----------------- GUARD: don't allow premature stop -----------------
             if data.get("stop", False):
                 need_create = _needs_create(goal)
@@ -328,6 +333,7 @@ class Planner:
                 print(f"   → {c}")
 
             observation = _execute_and_observe(cmds)
+            seen_actions.append(intent)
             # append observation to rolling memory
             memory.add(f"MIA: ran {intent} params={params} -> code={observation.code}")
             if observation.output:
@@ -369,4 +375,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

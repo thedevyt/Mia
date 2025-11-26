@@ -62,49 +62,83 @@ class App(tk.Tk):
     # --- Background handler for processing commands ---
     def _handle(self, text: str):
         self.status.config(text="Processing…")
+        MAX_STEPS = 5
+        seen_actions: dict = {}
+        stop = False
+        followup_note = ""
+        step = 0
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
-            # --- Combine memory context + current user input ---
-            context_prompt = self.memory.to_prompt()
-            user_prompt = f"{context_prompt}\n\nUser: {text}" if context_prompt else text
-
-            # --- Create a new event loop for this thread (Tkinter safe) ---
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            data = loop.run_until_complete(self.engine.parse(user_prompt, SYSTEM_PROMPT))
-            loop.close()
-
-            # --- Parse result from LLM ---
-            if not isinstance(data, dict):
-                self.log(f"Error: Invalid response from engine → {data}")
-                return
-
-            intent = data.get("intent")
-            params = data.get("params", {})
-
-            # --- Store in short-term memory ---
             self.memory.add(f"User: {text}")
-            self.memory.add(f"MIA: {data}")
+            while not stop and step < MAX_STEPS:
+                step += 1
+                # --- Combine memory context + current user input ---
+                context_prompt = self.memory.to_prompt()
+                user_prompt = f"{context_prompt}\n\nUser: {text}" if context_prompt else text
+                if followup_note:
+                    user_prompt = f"{user_prompt}\n\nSystem: {followup_note}"
 
-            # --- Update symbolic context for future prompts ---
-            if intent == "create_folder" and "path" in params:
-                self.memory.set("last_folder", params["path"])
-            elif intent == "create_file" and "path" in params:
-                self.memory.set("last_file", params["path"])
-            elif intent == "edit_file" and "path" in params:
-                self.memory.set("last_file", params["path"])
+                data = loop.run_until_complete(self.engine.parse(user_prompt, SYSTEM_PROMPT))
 
-            # --- Execute the resulting intent ---
-            spec = self.router.get(intent)
-            cmds = self.execu.build(spec, params)
-            for c in cmds:
-                self.log(f"→ {c}")
+                # --- Parse result from LLM ---
+                if not isinstance(data, dict):
+                    self.log(f"Error: Invalid response from engine → {data}")
+                    break
 
-            code = self.execu.run(cmds)
-            self.log(f"✔ Exit code: {code}")
+                intent = data.get("intent")
+                params = data.get("params", {}) or {}
+                stop = data.get("stop", False)
+
+                # --- Store in short-term memory ---
+                self.memory.add(f"MIA: {data}")
+
+                if stop:
+                    self.log(data.get("report") or "Done.")
+                    break
+
+                if not intent:
+                    self.log("Error: Missing intent from engine response.")
+                    break
+
+                # --- Update symbolic context for future prompts ---
+                if intent == "create_folder" and "path" in params:
+                    self.memory.set("last_folder", params["path"])
+                elif intent in ("create_file", "write_file", "edit_file") and "path" in params:
+                    self.memory.set("last_file", params["path"])
+
+                key = (intent, tuple(sorted(params.items())))
+                if key in seen_actions and seen_actions[key] == 0:
+                    self.log("[GUARD] Repeated successful action detected, stopping before re-running.")
+                    break
+
+                # --- Execute the resulting intent ---
+                spec = self.router.get(intent)
+                cmds = self.execu.build(spec, params)
+                for c in cmds:
+                    self.log(f"→ {c}")
+
+                code = self.execu.run(cmds)
+                self.log(f"✔ Exit code: {code}")
+                self.memory.add(f"MIA: ran {intent} params={params} -> code={code}")
+
+                seen_actions[key] = code
+                if code != 0 and list(seen_actions.values()).count(code) > 1:
+                    self.log("[GUARD] Repeated failing action detected, stopping loop.")
+                    break
+
+                followup_note = f"Last action: {intent} with params {params}, exit code {code}. Continue until the goal is satisfied or set stop=true."
+
+            if step >= MAX_STEPS:
+                self.log("Reached max steps without stop signal.")
 
         except Exception as e:
             self.log(f"Error: {e}")
         finally:
+            try:
+                loop.run_until_complete(loop.shutdown_asyncgens())
+            finally:
+                loop.close()
             self.status.config(text="Ready")
 
 
