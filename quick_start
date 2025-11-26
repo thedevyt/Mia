@@ -1,10 +1,12 @@
-# CLI mode
+source .venv/bin/activate
+
+# CLI mode not built
 python -m ai_adapter.cli
 
 # GUI mode
 python -m ai_adapter.gui
 
-# Voice mode
+# Voice mode not built
 python -m ai_adapter.voice
 
 # Agent mode
